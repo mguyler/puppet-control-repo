@@ -18,7 +18,7 @@
 
 # Define filebucket 'main':
 filebucket { 'main':
-  server => 'puppet2-old.sdn-vz.net',
+  server => 'puppet1.sdn-vz.net',
   path   => false,
 }
 
@@ -66,6 +66,77 @@ tidy {'/cftmp/':
         matches => "pica*.deb"
 }
 
+
+class hp5712_picos_d424696{
+
+service { 'picos':
+	ensure => 'running',
+}
+
+
+file { "/cftmp/pica-linux-2.7.1S7-HP5712-d424696.deb":
+        mode =>'440',
+        ensure => 'present',
+        owner => 'root',
+        group => 'root',
+        source => "puppet:///modules/picaovs/pica-linux-2.7.1S7-HP5712-d424696.deb"
+}
+file { "/cftmp/pica-tools-2.7.1S7-HP5712-d424696.deb":
+        mode =>'440',
+        ensure => 'present',
+        owner => 'root',
+        group => 'root',
+        source => "puppet:///modules/picaovs/pica-tools-2.7.1S7-HP5712-d424696.deb"
+}
+file { "/cftmp/pica-ovs-2.7.1S7-HP5712-d424696.deb":
+        mode =>'440',
+        ensure => 'present',
+        owner => 'root',
+        group => 'root',
+        source => "puppet:///modules/picaovs/pica-ovs-2.7.1S7-HP5712-d424696.deb"
+}
+
+exec {'move picos_start.conf to picos_start.conf.bak':
+	command => 'cp /etc/picos/picos_start.conf /etc/picos/picos_start.conf.bak',
+	path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+}
+
+package {'pica-linux-2.7.1S7-HP5712-d424696.deb':
+        provider => dpkg,
+        ensure => latest,
+        source => "/cftmp/pica-linux-2.7.1S7-HP5712-d424696.deb"
+}
+package {'pica-tools-2.7.1S7-HP5712-d424696.deb':
+        provider => dpkg,
+        ensure => latest,
+        source => "/cftmp/pica-tools-2.7.1S7-HP5712-d424696.deb"
+}
+
+exec { "move picos_start.conf.bak to picos_start.conf":
+        command => 'cp /etc/picos/picos_start.conf.bak /etc/picos/picos_start.conf',
+        path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+}
+
+package {'pica-ovs-2.7.1S7-HP5712-d424696.deb':
+        provider => dpkg,
+        ensure => latest,
+        source => "/cftmp/pica-ovs-2.7.1S7-HP5712-d424696.deb"
+}
+
+#exec { 'Set TCAM Match Mode: 1-256 v6-full, 257-512 v6-64, 513-3328 v4':
+#	command => 'ovs-vsctl set-match-mode ipv6_full=1-256,ipv6_64=257-512,ipv4=513-3328',
+#	path    => '/usr/sbin:/usr/bin:/sbin:/bin:/ovs/bin:/ovs/sbin',
+#	notify  => Service['picos'],
+#}
+
+exec { 'HW flow handling':
+	command => 'ovs-vsctl set-flow-handling-mode hardware_flow_only',
+	path    => '/usr/sbin:/usr/bin:/sbin:/bin:/ovs/bin:/ovs/sbin',
+	notify => Service['picos'],
+}
+	
+
+}
 
 class hp5712_picos_714aa4e{
 
